@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WebApp.Models
 {
-    public sealed class UserRegistrationRequest
+    public sealed class UserRegistration
     {
         [Required]
         [MinLength(3)]

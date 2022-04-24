@@ -1,9 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Models;
 using WebApp.Models;
+using WebApp.Services;
 
 namespace WebApp.Controllers
 {
@@ -11,36 +10,22 @@ namespace WebApp.Controllers
     [Route("api/users")]
     public class UserController : ControllerBase
     {
-        private readonly ApplicationContext applicationContext;
+        private readonly IUserService userService;
 
-        public UserController(ApplicationContext applicationContext)
+        public UserController(IUserService userService)
         {
-            this.applicationContext = applicationContext;
+            this.userService = userService;
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
-        public async Task<IActionResult> RegisterAsync([FromBody] UserRegistrationRequest registrationRequest)
+        public async Task<IActionResult> RegisterAsync([FromBody] UserRegistration userRegistration)
         {
-            var user = new User
-            {
-                Birthday = registrationRequest.Birthday.Value,
-                Email = registrationRequest.Email,
-                Id = Guid.NewGuid(),
-                Login = registrationRequest.Login,
-                Name = registrationRequest.Name,
-                Password = registrationRequest.Password,
-                Phone = registrationRequest.Phone
-            };
+            var user = await this.userService.RegisterUserAsync(userRegistration);
 
-            await this.applicationContext.AddAsync(user);
-            await this.applicationContext.SaveChangesAsync();
-
-            var t = await this.applicationContext.FindAsync<User>(user.Id);
-
-            return this.Ok();
+            return this.Ok(user);
         }
     }
 }

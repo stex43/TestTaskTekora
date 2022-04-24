@@ -1,17 +1,20 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Stack } from "@fluentui/react/lib/Stack";
-import { initializeIcons } from "@fluentui/react/lib/Icons";
 import { TextField, MaskedTextField } from "@fluentui/react/lib/TextField";
 import { Calendar, defaultCalendarStrings } from "@fluentui/react";
 import { Label } from "@fluentui/react/lib/Label";
 import { PrimaryButton } from "@fluentui/react/lib/Button";
+import { MessageBar, MessageBarType } from "@fluentui/react";
 import { format } from "date-fns"
 
 export const app: React.FC = () => {
+    const formatLoginErrorMessage = "Use 3-15 symbols: A-Z, a-z, 0-9, _";
+    const conflictedLoginMessage = "Login is already taken";
+    const registrationFailedErrorMessage = "Registration has failed";
+
     const loginRegexp = /^[A-Za-z0-9_]{3,15}$/;
     const emailRegexp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     const [login, setLogin] = useState<string>();
     const [password, setPassword] = useState<string>();
     const [passwordRepeat, setRepeatPassword] = useState<string>();
@@ -20,15 +23,26 @@ export const app: React.FC = () => {
     const [phone, setPhone] = useState<string>();
     const [birthday, setBirthday] = useState<Date>();
 
-    initializeIcons();
+    const [isSearching, setIsSearching] = useState<boolean>(false);
+    const [conflictedLogin, setConflictedLogin] = useState<boolean>(false);
+    const [registrationFailed, setRegistrationFailed] = useState<boolean>(false);
 
+    const [registrationDone, setRegistrationDone] = useState<boolean>(false);
+
+    useEffect(() => {
+            setConflictedLogin(false);
+            setRegistrationFailed(false);
+            setRegistrationDone(false);
+        },
+        [login]);
+    
     return (
         <Stack styles={{ "root": { "width": 400 } }} tokens={{ "childrenGap": 20 }} >
             <TextField
                 label="Enter your login"
                 onChange={(_, value) => setLogin(value)}
                 required
-                errorMessage={hasLoginError() ? "Use 3-15 symbols: A-Z, a-z, 0-9, _" : ""}
+                errorMessage={hasLoginError() ? formatLoginErrorMessage : conflictedLogin ? conflictedLoginMessage : undefined}
             />
 
             <TextField
@@ -64,15 +78,15 @@ export const app: React.FC = () => {
                     showGoToToday={false}
                     onSelectDate={(value) => setBirthday(value)}
                     strings={defaultCalendarStrings}
+                    maxDate={new Date(Date.now())}
                 />
 
                 <TextField
                     readOnly
                     underlined
                     value={birthday !== undefined ? format(birthday, "dd.MM.yyyy") : ""}
-                    errorMessage={birthday === undefined ? "Select your birthday" : "" }/>
+                    errorMessage={birthday === undefined ? "Select your birthday" : ""} />
             </Stack>
-            
 
             <TextField
                 label="Enter your email"
@@ -87,10 +101,27 @@ export const app: React.FC = () => {
                 mask="+7 (999) 999-99-99"
                 required />
 
-            <PrimaryButton
-                text={"Register123123"}
-                onClick={() => console.log(123)}
-            />
+            <Stack>
+                <PrimaryButton
+                    text={"Register"}
+                    disabled={!canRegister() || conflictedLogin || isSearching || registrationDone}
+                    onClick={async () => await createUser()}
+                />
+
+                {(conflictedLogin || registrationFailed) &&
+                    <MessageBar
+                        delayedRender={false}
+                        messageBarType={MessageBarType.error}>
+                        {conflictedLogin ? conflictedLoginMessage : registrationFailed ? registrationFailedErrorMessage : undefined}
+                    </MessageBar>}
+
+                {registrationDone &&
+                    <MessageBar
+                        delayedRender={false}
+                        messageBarType={MessageBarType.success}>
+                        Successful registration
+                    </MessageBar>}
+            </Stack>
         </Stack>
     );
 
@@ -99,8 +130,7 @@ export const app: React.FC = () => {
             return false;
         }
 
-        return password.length !== 0 ;
-        //return password.length !== 0 && (password.length < 6 || password.length > 30);
+        return password.length !== 0 && (password.length < 6 || password.length > 30);
     }
 
     function hasRepeatPasswordError(): boolean {
@@ -154,6 +184,8 @@ export const app: React.FC = () => {
     }
 
     async function createUser() {
+        setIsSearching(true);
+
         const content = {
             Login: login,
             Password: password,
@@ -169,5 +201,19 @@ export const app: React.FC = () => {
                 body: JSON.stringify(content),
                 headers: { "Content-Type": "application/json" }
             });
+
+        setIsSearching(false);
+
+        if (response.ok) {
+            setRegistrationDone(true);
+            return;
+        }
+
+        if (response.status === 409) {
+            setConflictedLogin(true);
+            return;
+        }
+
+        setRegistrationFailed(true);
     }
 }
