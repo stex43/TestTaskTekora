@@ -8,7 +8,7 @@
 <li class="has-line-data" data-line-start="6" data-line-end="7">Email</li>
 <li class="has-line-data" data-line-start="7" data-line-end="8">Phone</li>
 </ul>
-<h6 class="code-line" data-line-start=8 data-line-end=9 ><a id="There_is_a_backup_of_the_test_database_in_file_tekorabak_It_has_three_users_login1_login2_and_login3_8"></a>There is a backup of the test database in file tekora.bak. It has three users <code>login1</code>, <code>login2</code> and <code>login3</code>.</h6>
+<h6 class="code-line" data-line-start=8 data-line-end=9 ><a id="There_is_a_backup_of_the_test_database_in_file_tekorabak_It_has_three_users_login1_login2_and_login3_8"></a>There is a backup of the test database in file <code>tekora.bak</code>. It has three users <code>login1</code>, <code>login2</code> and <code>login3</code>.</h6>
 <h5 class="code-line" data-line-start=9 data-line-end=10 ><a id="Backend_based_on_9"></a>Backend based on:</h5>
 <ul>
 <li class="has-line-data" data-line-start="10" data-line-end="11">ASP .NET Core</li>
